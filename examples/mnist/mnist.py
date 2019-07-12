@@ -11,10 +11,6 @@ from torchvision.datasets import MNIST
 from tensorboardX import SummaryWriter
 import uuid
 
-import sys
-sys.path.append('E:\\workspace\\python\pt-sdae')
-sys.path.append('E:\\workspace\\python\pt-dec')
-
 from ptdec.dec import DEC
 from ptdec.model import train, predict
 from ptsdae.sdae import StackedDenoisingAutoEncoder
@@ -52,44 +48,6 @@ class CachedMNIST(Dataset):
     def __len__(self) -> int:
         return 128 if self.testing_mode else len(self.ds)
 
-
-# @click.command()
-# @click.option(
-#     '--data_dir',
-#     help='Root data directories contains data for training/testing.',
-#     type=str,
-#     default='data'
-# )
-# @click.option(
-#     '--cuda',
-#     help='whether to use CUDA (default False).',
-#     type=bool,
-#     default=False
-# )
-# @click.option(
-#     '--batch-size',
-#     help='training batch size (default 256).',
-#     type=int,
-#     default=256
-# )
-# @click.option(
-#     '--pretrain-epochs',
-#     help='number of pretraining epochs (default 300).',
-#     type=int,
-#     default=300
-# )
-# @click.option(
-#     '--finetune-epochs',
-#     help='number of finetune epochs (default 500).',
-#     type=int,
-#     default=500
-# )
-# @click.option(
-#     '--testing-mode',
-#     help='whether to run in testing mode (default False).',
-#     type=bool,
-#     default=False
-# )
 def main(
     data_dir,
     cuda,
@@ -187,8 +145,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     main(args.data_dir,
-        args.batch_size,
         args.cuda,
+        args.batch_size,
         args.pretrain,
         args.finetune,
         args.testing_mode)
