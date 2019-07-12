@@ -11,6 +11,10 @@ from torchvision.datasets import MNIST
 from tensorboardX import SummaryWriter
 import uuid
 
+import sys
+sys.path.append('E:\\workspace\\python\pt-sdae')
+sys.path.append('E:\\workspace\\python\pt-dec')
+
 from ptdec.dec import DEC
 from ptdec.model import train, predict
 from ptsdae.sdae import StackedDenoisingAutoEncoder
@@ -77,7 +81,7 @@ def main(
     )
     # if cuda:
     #     autoencoder.cuda()
-    autoencoder.to(device)
+    autoencoder = autoencoder.to(device)
     print('Pretraining stage.')
     ae.pretrain(
         ds_train,
@@ -113,7 +117,7 @@ def main(
     )
     # if cuda:
     #     model.cuda()
-    model.to(device)
+    model = model.to(device)
     dec_optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9)
     train(
         dataset=ds_train,
