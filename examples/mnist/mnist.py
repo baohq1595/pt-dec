@@ -11,6 +11,10 @@ from torchvision.datasets import MNIST
 from tensorboardX import SummaryWriter
 import uuid
 
+import sys
+sys.path.append('E:\\workspace\\python\pt-sdae')
+sys.path.append('E:\\workspace\\python\pt-dec')
+
 from ptdec.dec import DEC
 from ptdec.model import train, predict
 from ptsdae.sdae import StackedDenoisingAutoEncoder
@@ -19,14 +23,14 @@ from ptdec.utils import cluster_accuracy
 
 
 class CachedMNIST(Dataset):
-    def __init__(self, train, cuda, testing_mode=False):
+    def __init__(self, data_dir, is_train, cuda, testing_mode=False):
         img_transform = transforms.Compose([
             transforms.Lambda(self._transformation)
         ])
         self.ds = MNIST(
-            './data',
+            data_dir,
             download=True,
-            train=train,
+            train=is_train,
             transform=img_transform
         )
         self.cuda = cuda
@@ -49,38 +53,45 @@ class CachedMNIST(Dataset):
         return 128 if self.testing_mode else len(self.ds)
 
 
-@click.command()
-@click.option(
-    '--cuda',
-    help='whether to use CUDA (default False).',
-    type=bool,
-    default=False
-)
-@click.option(
-    '--batch-size',
-    help='training batch size (default 256).',
-    type=int,
-    default=256
-)
-@click.option(
-    '--pretrain-epochs',
-    help='number of pretraining epochs (default 300).',
-    type=int,
-    default=300
-)
-@click.option(
-    '--finetune-epochs',
-    help='number of finetune epochs (default 500).',
-    type=int,
-    default=500
-)
-@click.option(
-    '--testing-mode',
-    help='whether to run in testing mode (default False).',
-    type=bool,
-    default=False
-)
+# @click.command()
+# @click.option(
+#     '--data_dir',
+#     help='Root data directories contains data for training/testing.',
+#     type=str,
+#     default='data'
+# )
+# @click.option(
+#     '--cuda',
+#     help='whether to use CUDA (default False).',
+#     type=bool,
+#     default=False
+# )
+# @click.option(
+#     '--batch-size',
+#     help='training batch size (default 256).',
+#     type=int,
+#     default=256
+# )
+# @click.option(
+#     '--pretrain-epochs',
+#     help='number of pretraining epochs (default 300).',
+#     type=int,
+#     default=300
+# )
+# @click.option(
+#     '--finetune-epochs',
+#     help='number of finetune epochs (default 500).',
+#     type=int,
+#     default=500
+# )
+# @click.option(
+#     '--testing-mode',
+#     help='whether to run in testing mode (default False).',
+#     type=bool,
+#     default=False
+# )
 def main(
+    data_dir,
     cuda,
     batch_size,
     pretrain_epochs,
@@ -96,8 +107,8 @@ def main(
             'loss': loss,
             'validation_loss': validation_loss,
         }, epoch)
-    ds_train = CachedMNIST(train=True, cuda=cuda, testing_mode=testing_mode)  # training dataset
-    ds_val = CachedMNIST(train=False, cuda=cuda, testing_mode=testing_mode)  # evaluation dataset
+    ds_train = CachedMNIST(data_dir, is_train=True, cuda=cuda, testing_mode=testing_mode)  # training dataset
+    ds_val = CachedMNIST(data_dir, is_train=False, cuda=cuda, testing_mode=testing_mode)  # evaluation dataset
     autoencoder = StackedDenoisingAutoEncoder(
         [28 * 28, 500, 500, 2000, 10],
         final_activation=None
@@ -165,4 +176,19 @@ def main(
 
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description='DEC.')
+    parser.add_argument('--data_dir', required=True, type=str, help='Root directory contains training/testing data')
+    parser.add_argument('--cuda', type=bool, default=True, help='Whether to use cuda')
+    parser.add_argument('--batch_size', type=int, default=256, help='Training batch size')
+    parser.add_argument('--pretrain', type=int, default=300, help='# of pretrain epoches')
+    parser.add_argument('--finetune', type=int, default=200, help='# of finetune epoches')
+    parser.add_argument('--testing_mode', type=bool, default=True, help='Testing mode')
+
+    args = parser.parse_args()
+    main(args.data_dir,
+        args.batch_size,
+        args.cuda,
+        args.pretrain,
+        args.finetune,
+        args.testing_mode)
