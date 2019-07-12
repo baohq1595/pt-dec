@@ -19,17 +19,21 @@ from ptdec.utils import cluster_accuracy
 
 
 class CachedMNIST(Dataset):
-    def __init__(self, data_dir, is_train, cuda, testing_mode=False):
+    def __init__(self, data_dir, is_train, device, testing_mode=False):
         img_transform = transforms.Compose([
             transforms.Lambda(self._transformation)
+        ])
+        target_transform = transforms.Compose([
+            transforms.ToTensor()
         ])
         self.ds = MNIST(
             data_dir,
             download=True,
             train=is_train,
-            transform=img_transform
+            transform=img_transform,
         )
-        self.cuda = cuda
+        # self.cuda = cuda
+        self.device = device
         self.testing_mode = testing_mode
         self._cache = dict()
 
@@ -40,9 +44,8 @@ class CachedMNIST(Dataset):
     def __getitem__(self, index: int) -> torch.Tensor:
         if index not in self._cache:
             self._cache[index] = list(self.ds[index])
-            if self.cuda:
-                self._cache[index][0] = self._cache[index][0].cuda(non_blocking=True)
-                self._cache[index][1] = self._cache[index][1].cuda(non_blocking=True)
+            # self._cache[index][0] = self._cache[index][0].to(self.device, non_blocking=True)
+            # self._cache[index][1] = self._cache[index][1].to(self.device, non_blocking=True)
         return self._cache[index]
 
     def __len__(self) -> int:
@@ -65,19 +68,21 @@ def main(
             'loss': loss,
             'validation_loss': validation_loss,
         }, epoch)
-    ds_train = CachedMNIST(data_dir, is_train=True, cuda=cuda, testing_mode=testing_mode)  # training dataset
-    ds_val = CachedMNIST(data_dir, is_train=False, cuda=cuda, testing_mode=testing_mode)  # evaluation dataset
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    ds_train = CachedMNIST(data_dir, is_train=True, device=device, testing_mode=testing_mode)  # training dataset
+    ds_val = CachedMNIST(data_dir, is_train=False, device=device, testing_mode=testing_mode)  # evaluation dataset
     autoencoder = StackedDenoisingAutoEncoder(
         [28 * 28, 500, 500, 2000, 10],
         final_activation=None
     )
-    if cuda:
-        autoencoder.cuda()
+    # if cuda:
+    #     autoencoder.cuda()
+    autoencoder.to(device)
     print('Pretraining stage.')
     ae.pretrain(
         ds_train,
         autoencoder,
-        cuda=cuda,
+        device=device,
         validation=ds_val,
         epochs=pretrain_epochs,
         batch_size=batch_size,
@@ -90,7 +95,7 @@ def main(
     ae.train(
         ds_train,
         autoencoder,
-        cuda=cuda,
+        device=device,
         validation=ds_val,
         epochs=finetune_epochs,
         batch_size=batch_size,
@@ -106,8 +111,9 @@ def main(
         hidden_dimension=10,
         encoder=autoencoder.encoder
     )
-    if cuda:
-        model.cuda()
+    # if cuda:
+    #     model.cuda()
+    model.to(device)
     dec_optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9)
     train(
         dataset=ds_train,
