@@ -12,8 +12,6 @@ from tensorboardX import SummaryWriter
 import uuid
 
 import sys
-sys.path.append('E:\\workspace\\python\pt-sdae')
-sys.path.append('E:\\workspace\\python\pt-dec')
 
 from ptdec.dec import DEC
 from ptdec.model import train, predict
@@ -86,7 +84,7 @@ def main(
         epochs=pretrain_epochs,
         batch_size=batch_size,
         optimizer=lambda model: SGD(model.parameters(), lr=0.1, momentum=0.9),
-        scheduler=lambda x: StepLR(x, 100, gamma=0.1),
+        scheduler=lambda x: StepLR(x, 20000, gamma=0.1),
         corruption=0.2
     )
     print('Training stage.')
@@ -99,7 +97,7 @@ def main(
         epochs=finetune_epochs,
         batch_size=batch_size,
         optimizer=ae_optimizer,
-        scheduler=StepLR(ae_optimizer, 100, gamma=0.1),
+        scheduler=StepLR(ae_optimizer, 20000, gamma=0.1),
         corruption=0.2,
         update_callback=training_callback
     )
@@ -116,7 +114,7 @@ def main(
     train(
         dataset=ds_train,
         model=model,
-        epochs=100,
+        epochs=1000,
         batch_size=256,
         optimizer=dec_optimizer,
         stopping_delta=0.000001,
@@ -141,10 +139,10 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='DEC.')
     parser.add_argument('--data_dir', required=True, type=str, help='Root directory contains training/testing data')
-    parser.add_argument('--cuda', type=bool, default=True, help='Whether to use cuda')
+    parser.add_argument('--cuda', type=bool, default=False, help='Whether to use cuda')
     parser.add_argument('--batch_size', type=int, default=256, help='Training batch size')
-    parser.add_argument('--pretrain', type=int, default=300, help='# of pretrain epoches')
-    parser.add_argument('--finetune', type=int, default=200, help='# of finetune epoches')
+    parser.add_argument('--pretrain', type=int, default=50000, help='# of pretrain epoches')
+    parser.add_argument('--finetune', type=int, default=100000, help='# of finetune epoches')
     parser.add_argument('--testing_mode', type=bool, default=True, help='Testing mode')
 
     args = parser.parse_args()
