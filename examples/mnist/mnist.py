@@ -12,7 +12,9 @@ from tensorboardX import SummaryWriter
 import uuid
 
 import sys
-
+sys.path.append('E:\\workspace\\python\\pt-sdae')
+sys.path.append('E:\\workspace\\python\\pt-dec')
+    
 from ptdec.dec import DEC
 from ptdec.model import train, predict
 from ptsdae.sdae import StackedDenoisingAutoEncoder
@@ -83,6 +85,7 @@ def main(
         validation=ds_val,
         epochs=pretrain_epochs,
         batch_size=batch_size,
+        silent=True,
         optimizer=lambda model: SGD(model.parameters(), lr=0.1, momentum=0.9),
         scheduler=lambda x: StepLR(x, 20000, gamma=0.1),
         corruption=0.2
@@ -96,6 +99,7 @@ def main(
         validation=ds_val,
         epochs=finetune_epochs,
         batch_size=batch_size,
+        silent=True,
         optimizer=ae_optimizer,
         scheduler=StepLR(ae_optimizer, 20000, gamma=0.1),
         corruption=0.2,
@@ -116,6 +120,7 @@ def main(
         model=model,
         epochs=1000,
         batch_size=256,
+        silent=True,
         optimizer=dec_optimizer,
         stopping_delta=0.000001,
         cuda=cuda
