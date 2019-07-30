@@ -135,9 +135,9 @@ def train(
                     update_callback(accuracy, loss_value, delta_label)
         predicted, actual = predict(dataset, model, evaluate_batch_size, silent=True, return_actual=True, cuda=cuda)
         delta_label = float((predicted != predicted_previous).float().sum().item()) / predicted_previous.shape[0]
-        if stopping_delta is not None and delta_label < stopping_delta:
-            print('Early stopping as label delta "%1.5f" less than "%1.5f".' % (delta_label, stopping_delta))
-            break
+        # if stopping_delta is not None and delta_label < stopping_delta:
+        #     print('Early stopping as label delta "%1.5f" less than "%1.5f".' % (delta_label, stopping_delta))
+        #     break
         predicted_previous = predicted
         _, accuracy = cluster_accuracy(predicted.cpu().numpy(), actual.cpu().numpy())
         data_iterator.set_postfix(
