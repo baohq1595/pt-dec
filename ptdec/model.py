@@ -18,7 +18,7 @@ def train(
         stopping_delta: Optional[float] = None,
         cuda: bool = True,
         sampler: Optional[torch.utils.data.sampler.Sampler] = None,
-        silent: bool = False,
+        silent: bool = True,
         update_freq: int = 10,
         evaluate_batch_size: int = 1024,
         update_callback: Optional[Callable[[float, float], None]] = None,

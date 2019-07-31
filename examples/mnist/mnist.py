@@ -118,7 +118,7 @@ def main(
     train(
         dataset=ds_train,
         model=model,
-        epochs=1000,
+        epochs=20000,
         batch_size=256,
         silent=True,
         optimizer=dec_optimizer,
